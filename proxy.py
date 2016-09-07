@@ -1,6 +1,6 @@
 class MethodInvocation(object):
     """Represents a method invocation intercepted by the Proxy."""
-    def __init__(self, obj, _callable, method_name, *method_args, **method_kwargs):
+    def __init__(self, obj, _callable, method_name, method_args, method_kwargs):
         self.obj = obj
         self.callable = _callable
         self.method_name = method_name
@@ -10,7 +10,14 @@ class MethodInvocation(object):
     def invoke(self):
         return self.callable(*self.method_args, **self.method_kwargs)
 
+class ArgsCallWrapper(object):
+    def __init__(self, _type, name):
+        self._type = _type
+        self.name = name
 
+    def __call__(self, *args, **kwargs):
+        return getattr(self._type, self.name).__call__(*args, **kwargs)
+        
 class ProxyInterceptor(object):
     """Instances of this class can be added to a Proxy instance,
     and methods will then be called when attributes are read, written
@@ -38,7 +45,7 @@ class ProxyInterceptor(object):
         callable from the Proxy is subsequently called."""
         pass
 
-    def on_call(self, invocation):
+    def on_call(self, obj, function, name, args, kwargs):
         """Called when a callable (such as a function), previously
         retrieved from the Proxy, is called. invocation is an instance
         of MethodInvocation.
@@ -101,9 +108,8 @@ class Proxy(object):
         if hasattr(result, '__call__'):
 
             def call_it(*args, **kwargs):
-                invocation = MethodInvocation(_obj, result, name, *args, **kwargs)
-                # print 'Proxy.call_it(%s)'%(name)
-                return _interceptor.on_call(invocation) #result(*args, **kwargs)
+                _callable = ArgsCallWrapper(type(_obj), name)
+                return _interceptor.on_call(_obj, _callable, name, args, kwargs)
             return call_it
 
         else:
