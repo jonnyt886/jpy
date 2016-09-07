@@ -30,49 +30,6 @@ class CommandResult:
         self.exit_code = exit_code
         self.success = exit_code == 0
 
-# Run an operating system command
-#
-# command_line   - the command line to run. As the command is run inside a shell, this can be a shell command
-# directory	  - if not None, change the working directory to the one specified when making the call
-# print_timing_info - print a message with the exit code and time taken to run the command once complete
-# grab_output	- if True, wait until the command is finished and return output as a tuple (stdout, stderr). If False,
-#				  the process can interact with the terminal and no stdout/stderr is collected. If you want to pass
-#				  input to the process, this must be True.
-# ignore_exist_code - if False, an exception is thrown if the process exits with a non-zero exit code. If this is true then
-#				  the exit code is ignored
-# input		  - a String representing input to pass into the process - grab_output must be True for this to work
-def run_command(command_line, directory = None, print_timing_info = False, \
-        shell='/bin/bash', grab_output = True, ignore_exit_code = False, input_string = None):
-	# For stuff we run through the shell shlex splitting doesn't work,
-	# so we just pass command_line straight through to bash.
-	#args = shlex.split(command_line)
-
-	stdout = None
-	stderr = None
-	p = None
-	
-	before = datetime.now()
-
-	if grab_output:
-		stdout, stderr, p = _run_grab_output(command_line, shell, directory, input_string)
-	else:
-		p = _run_no_output(command_line, shell, directory)
-	
-	after = datetime.now()
-
-	if print_timing_info:
-		print('')
-		print(('run_command: Command returned ' + str(p.returncode) + ', running time: ' + str(after - before)))
-		print('')
-
-	if not ignore_exit_code and p.returncode != 0:
-		raise OSError('Command "' + str(command_line) + '" failed with exit code: ' + str(p.returncode))
-
-	if grab_output:
-		return stdout.split(b'\n'), stderr.split(b'\n')
-	else:
-		return None, None
-
 def execute(command_line, directory = None, \
         print_timing_info = False, shell='/bin/bash', \
         grab_output = True, ignore_exit_code = False, \
@@ -133,7 +90,7 @@ def execute(command_line, directory = None, \
             exit_code = p.returncode)
 
 def _run_grab_output(command_line, shell, directory, input_string = None):
-		#print '_run_grab_output', command_line, shell, directory
+        #print '_run_grab_output', command_line, shell, directory
 	if input_string == None:
 		stdin = None
 	else:
@@ -151,7 +108,7 @@ def _run_grab_output(command_line, shell, directory, input_string = None):
 	return stdout, stderr, p
 	
 def _run_no_output(command_line, shell, directory):
-	print(('_run_no_output[command_line=', command_line, 'shell=', shell, 'dir=', directory))
+	#print(('_run_no_output[command_line=', command_line, 'shell=', shell, 'dir=', directory))
 	do_shell = (shell != None)
 	if do_shell: executable = shell
 	else: executable = None
