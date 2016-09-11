@@ -65,23 +65,23 @@ print(colours.RED + 'URGENT ' + colours.YELLOW + 'Your disks are full')
 ```
 
 It supports these colours:
-BLACK
-BLUE
-BROWN
-CYAN
-DBLUE
-GREEN
-GREY
-LCYAN
-LGREY
-LGREEN
-LPURPLE
-LRED
-NONE
-PURPLE
-RED
-WHITE
-YELLOW
+- BLACK
+- BLUE
+- BROWN
+- CYAN
+- DBLUE
+- GREEN
+- GREY
+- LCYAN
+- LGREY
+- LGREEN
+- LPURPLE
+- LRED
+- NONE
+- PURPLE
+- RED
+- WHITE
+- YELLOW
 
 I've never needed to add additional escape sequences but for some terminal applications this could be valuable. If you'd like to see additional properties here, submit a patch with your escape sequence and I'll include it.
 
