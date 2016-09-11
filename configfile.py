@@ -2,8 +2,6 @@
 # Represents a simple config file system, supporting importing, comments,
 # type-validate and pattern validation.
 #
-# Updated from configfile.py, which is used by findfile etc.
-# This version was created for pymus.
 
 # TODO
 # - add support for lists (i.e. if importing another file with a list of values, merge the lists rather than overwrite)
