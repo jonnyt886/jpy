@@ -26,8 +26,6 @@ IMPORT_REGEX = re.compile('^import (.+)$')
 NEWLINE = re.compile('.*(\\\\[\\r\\n]+)$')
 
 
-# converts the first item in the given list
-# to a bool, if possible
 def convert_to_bool(s):
     """Intelligently converts a string to a bool.
     All of 'yes', 'true', 'on', '1' convert to True.
@@ -72,31 +70,31 @@ def convert_value(value, val_type):
         return val_type(value)
 
 class ConfigFile(object):
-    # Initialise the ConfigFile.
-    #
-    # config_file is the path to a file that we can parse.
-    # defaults is an optional dict of default key->value
-    # 	pairs to use (added into the config file after the
-    # 	file is loaded for unset keys)
-    # must_exist, if false, allows you to create a blank
-    #	ConfigFile, in which case config_file doesn't need
-    #	to exist.
-    # config_values, if specified, should be a list of
-    #   ConfigValue instances, which provide configuration
-    #   for settings which will be stored in this ConfigFile.
-    #
-    # If config_values is specified:
-    # - all settings in files loaded into the ConfigFile
-    #   must have a corresponding ConfigValue with the same
-    #   name
-    # - all return values of get() will be converted according
-    #   to the corresponding ConfigValue's val_type
-    # - default values will be returned by get() if the
-    #   setting requested is not present and the corresponding
-    #   ConfigValue has a default_value set
-    #
     def __init__(self, config_file, defaults = {},
                  must_exist = True, config_values = None):
+        """Initialise the ConfigFile.
+        
+        config_file is the path to a file that we can parse.
+        defaults is an optional dict of default key->value
+            pairs to use (added into the config file after the
+            file is loaded for unset keys)
+        must_exist, if false, allows you to create a blank
+            ConfigFile, in which case config_file doesn't need
+            to exist.
+        config_values, if specified, should be a list of
+          ConfigValue instances, which provide configuration
+          for settings which will be stored in this ConfigFile.
+        
+        If config_values is specified:
+        - all settings in files loaded into the ConfigFile
+          must have a corresponding ConfigValue with the same
+          name
+        - all return values of get() will be converted according
+          to the corresponding ConfigValue's val_type
+        - default values will be returned by get() if the
+          setting requested is not present and the corresponding
+          ConfigValue has a default_value set
+        """
         self.items_dict = {}
         self.must_exist = must_exist
 
@@ -180,13 +178,14 @@ class ConfigFile(object):
             if not self.has(k):
                 self._set_attr(k, v)
 
-    # Import the items in another configfile into this configfile
-    #
-    # If overwrite is True, any values that exist in this
-    # instance and also in configfile are overwritten by the ones in
-    # configfile. if overwrite is False, the values in this instance
-    # are preserved.
     def import_configfile(self, configfile, overwrite = False):
+        """Import the items in another configfile into this configfile
+        
+        If overwrite is True, any values that exist in this
+        instance and also in configfile are overwritten by the ones in
+        configfile. if overwrite is False, the values in this instance
+        are preserved.
+        """
         asrt(type(configfile) is ConfigFile, 'configfile must be a ConfigFile instance (was ' + str(type(configfile)) + ', ' + str(configfile) + ')')
 
         for name, value in list(configfile.get_all().items()):
@@ -204,10 +203,11 @@ class ConfigFile(object):
 
         self.items_dict[name] = value
 
-    # look up a ConfigValue
-    #
-    # returns None if ConfigValues have not been set for this ConfigFile
     def get_configvalue(self, name):
+        """look up a ConfigValue
+        
+        returns None if ConfigValues have not been set for this ConfigFile
+        """
         if not self.config_values: return None
 
         n = name.lower()
@@ -217,22 +217,22 @@ class ConfigFile(object):
         return self.config_values[n]
 
 
-    # Retrieve a setting from the ConfigFile.
-    #
-    # If this ConfigFile has been configured with ConfigValues,
-    # and the corresponding ConfigValue for `name` has a default_value
-    # set, that value is returned if it does not exist in the ConfigFile.
-    #
-    # val_type can be specified, in which case the type of the value
-    # returned can be specified. This is most useful in cases where
-    # ConfigValues are being used to specify different datatypes; val_type
-    # can be specified to make the code more readable and to give you
-    # assurance that you'll get a certain type back.
-    # NB In practice setting val_type does not cause conversions to be
-    # performed. If set, the val_type is compared with the actual return
-    # type and an exception is thrown if they do not match.
-    #
     def get(self, name, val_type = None):
+        """Retrieve a setting from the ConfigFile.
+        
+        If this ConfigFile has been configured with ConfigValues,
+        and the corresponding ConfigValue for `name` has a default_value
+        set, that value is returned if it does not exist in the ConfigFile.
+        
+        val_type can be specified, in which case the type of the value
+        returned can be specified. This is most useful in cases where
+        ConfigValues are being used to specify different datatypes; val_type
+        can be specified to make the code more readable and to give you
+        assurance that you'll get a certain type back.
+        NB In practice setting val_type does not cause conversions to be
+        performed. If set, the val_type is compared with the actual return
+        type and an exception is thrown if they do not match.
+        """
         result = None
 
         if name in self.items_dict:
@@ -248,9 +248,8 @@ class ConfigFile(object):
 
         return result
 
-    # get as a boolean.
-    #
     def get_bool(self, name):
+        """get as a boolean."""
         if not self.has(name): return False
 
         s = self.get(name)
@@ -260,9 +259,9 @@ class ConfigFile(object):
         return name in self.items_dict
 
 
-    # Get a single property by name. An exception is thrown
-    # if more than one property by this name exists
     def get_single(self, name):
+        """Get a single property by name. An exception is thrown
+        if more than one property by this name exists"""
         result = self.get_list(name)
         if len(result) > 1:
             raise ValueError('More than one value has been assigned for setting ' + name)
@@ -270,12 +269,12 @@ class ConfigFile(object):
         # values are already unpacked by get_list()
         return result[0]
 
-    # Get all properties. (Meaning only those defined; for example, those
-    # where defaults have been set are *not* included in the return value
-    # for this method.)
-    #
-    # If prefix is specified, only return those with that prefix
     def get_all(self, prefix=None):
+        """Get all properties. (Meaning only those defined; for example, those
+        where defaults have been set are *not* included in the return value
+        for this method.)
+        
+        If prefix is specified, only return those with that prefix"""
         if prefix is None:
             return dict(self.items_dict)
 
@@ -289,11 +288,11 @@ class ConfigFile(object):
 
             return result
 
-    # set a value in the config file and write the config file to disk
-    #
-    # if write is False, do not write to disk, just keep the new value in
-    # memory
     def set(self, key, value, write = True):
+        """set a value in the config file and write the config file to disk
+        
+        if write is False, do not write to disk, just keep the new value in
+        memory"""
         cv = self.get_configvalue(key)
         self._set_attr(key, value)
 
@@ -314,13 +313,13 @@ class ConfigFile(object):
                     f.write(line)
                     f.write('\n')
 
-    # set several values in the config file and write the config file to disk
-    #
-    # if write is False, do not write to disk, just keep the new value in
-    # memory
-    # values should be a dict consisting of keys->values to write
-    #
     def set_with_dict(self, values, write = True):
+        """set several values in the config file and write the config file to disk
+        
+        if write is False, do not write to disk, just keep the new value in
+        memory
+        values should be a dict consisting of keys->values to write
+        """
         for key, value in list(values.items()):
             cv = self.get_configvalue(key)
             self._set_attr(key, value)
@@ -342,9 +341,9 @@ class ConfigFile(object):
                     f.write(line)
                     f.write('\n')
 
-# Represents a configuration value (or rather, the configuration
-# of that configuration value).
 class ConfigValue(object):
+    """Represents a configuration value (or rather, the configuration
+    of that configuration value)."""
     def __init__(self, name, default_value = None, val_type = str):
         self.name = name
         self.default_value = default_value
