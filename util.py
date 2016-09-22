@@ -1,8 +1,107 @@
 # General-purpose util module
 
-import os, locale, sys, select, re, types, datetime
+import os, locale, sys, select, re, types, datetime, traceback, pprint
 from .asrt import *
 import imp
+
+debug = False
+debug_filters = []
+def debug_enabled(d):
+    """
+    Enable debugging. This switches on debug output printed
+    via dprint().
+    """
+    global debug
+    debug = d
+
+def set_debug_filters(filters):
+    """
+    Sets the module names which debugging is enabled for.
+
+    Filters should be a list of strings, each string naming
+    a module. If filters is None or an empty list, debugging
+    is enabled for all modules.
+    """
+    global debug_filters
+
+    # clear filters so we can dprint() the new filter
+    debug_filters = None
+    dprint('new debug filters', debug_filters=filters)
+
+    if not filters: filters = []
+    debug_filters = filters
+
+def dprint(*args, **kwargs):
+    """
+    If pymusutil.debug is True, print out the attached to stderr.
+
+    dprint() does a number of funky things you need to be aware of:
+     - dprint will look up the stack frame and print out the file, line
+       number and function name it was called from
+     - lines are indented to indicate stack depth (and hopefully give
+       clues as to which functions are calling others)
+     - args are printed as would be with print(), and kwargs are then
+       printed in key=value pairs, one per line, after args. This allows
+       you to do cool things like dprint(**locals()) to print out all local
+       vars
+     - as with print(), it converts all items to strings, but any kwargs
+       that are *not* strings will also have their types printed after
+       their values
+     - any args or kwargs that look like paths (i.e. os.path.exists() = True)
+       will have the path *stripped* (using os.path.basename) and replaced
+       '#/' to indicated that has taken place. So, "/path/to/file"
+       becomes "#/file". Clearly this behaviour could be undesirable when
+       debugging some code, so it can be disabled by adding _no_basenames=True
+       to the arg list
+     - all output goes to stderr
+     - debug statements are filtered according to set_debug_filters(). If
+       debug_filters is an empty list, no filtering is performed. Otherwise,
+       only modules whose names are included in debug_filters are printed.
+
+     As dprint does all this funky stuff you should assume it is
+     very expensive to execute when debug is True. No processing inside
+     the function takes place when debug is False.
+
+     Special arguments that can modify debug behaviour:
+     - _no_basenames = disable basenaming behaviour (see above)
+
+    """
+    global debug
+    global debug_filters
+
+    if debug:
+        no_basenames=False
+        if '_no_basenames' in kwargs and kwargs['_no_basenames']:
+            del kwargs['_no_basenames']
+            no_basenames=True
+
+        # get the frame representing the calling function
+        stack_frame = traceback.extract_stack()[-2] 
+        depth = len(traceback.extract_stack())-2
+
+        def basename_if_str_and_path(s):
+            if no_basenames: return s
+            if type(s) is str and os.path.exists(s):
+                suffix = '/' if os.path.isdir(s) else ''
+                return '#/' + os.path.basename(s) + suffix
+            return s
+
+        module_name = os.path.basename(stack_frame.filename)
+        if module_name[-3:] == '.py': module_name = module_name[0:-3]
+
+        if not debug_filters or (debug_filters and module_name in debug_filters):
+            prefix = module_name+':'+str(stack_frame.lineno)+' '+stack_frame.name+'() '
+            argstring = ' '.join([basename_if_str_and_path(a) if type(a) is str else pprint.pformat(a) for a in args])
+
+            if argstring:
+                print(' '*depth+prefix, argstring, file=sys.stderr)
+
+            for k, v in kwargs.items():
+                print(' '*depth+prefix, '  ', k, '=', 
+                        basename_if_str_and_path(v) if type(v) is str else pprint.pformat(v), 
+                        '' if type(v) is str else type(v), file=sys.stderr)
+
+
 
 # The familiar 'die' function
 def die(msg):
