@@ -1,7 +1,6 @@
 # simple csv - wrapper around csvreader which makes asserting headers a little easier
 
 from jpy.asrt import *
-from jpy.util import to_unicode
 import csv, codecs
 
 class CSV(object):
@@ -90,7 +89,7 @@ class CSVWriter(object):
             raise ValueError('aah not a list!')
 
         else:
-            #data = [x.encode('utf-8') for x in to_unicode(data)]
+            #data = [x.encode('utf-8') for x in data]
             self.writer.writerow(data)
 
     def _write_dict(self, d):
