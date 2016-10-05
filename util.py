@@ -716,3 +716,15 @@ class DataHolder(object):
 def convert_datetime_to_seconds_since_epoch(d):
     # http://stackoverflow.com/a/11743262
     return (d - datetime.datetime(1970,1,1)).total_seconds()
+
+def replace_chars(f, d):
+    """
+    Replace strings using a dict.
+    d should be a dict of characters to search for -> string to replace with
+    """
+    tail = f
+    for (s,r) in list(d.items()):
+        for c in s:
+            tail = tail.replace(c, r)
+
+    return tail

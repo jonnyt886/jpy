@@ -30,6 +30,14 @@ class CommandResult:
         self.exit_code = exit_code
         self.success = exit_code == 0
 
+    @property
+    def stdout_lines(self):
+        return self.stdout.split(b'\n')
+
+    @property
+    def stderr_lines(self):
+        return self.stderr.split(b'\n')
+
 def execute(command_line, directory = None, \
         print_timing_info = False, shell='/bin/bash', \
         grab_output = True, ignore_exit_code = False, \
