@@ -41,7 +41,8 @@ class CommandResult:
 def execute(command_line, directory = None, \
         print_timing_info = False, shell='/bin/bash', \
         grab_output = True, ignore_exit_code = False, \
-        input_string = None):
+        input_string = None, auto_decode=True,
+        decode_using=sys.stdout.encoding):
     """Run an operating system command. This is an updated
     version of run_command() which returns a CommandResult
     object instead of a tuple.
@@ -61,6 +62,13 @@ def execute(command_line, directory = None, \
         value
     input_string: a String representing input to pass into 
         the process - grab_output must be True for this to work
+    auto_decode: automatically decode the output from the
+        command's stdout/stderr streams using the encoding 
+        specified by decode_using (decode_using defaults to this
+        script's output encoding, auto_decode defaults to True)
+    decode_using: the encoding used to decode stdout/stderr. Only
+        has an effect if auto_decode is set to True. Defaults to
+        sys.stdout.encoding.
     """
     # For stuff we run through the shell shlex splitting doesn't work,
     # so we just pass command_line straight through to bash.
@@ -88,6 +96,10 @@ def execute(command_line, directory = None, \
 #    if grab_output:
 #            stdout = stdout.split('\n')
 #            stderr = stderr.split('\n')
+
+    if auto_decode:
+        if stdout: stdout=stdout.decode(decode_using)
+        if stderr: stderr=stderr.decode(decode_using)
 
     return CommandResult(
             process=p,
